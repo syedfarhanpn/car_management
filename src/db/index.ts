@@ -1,5 +1,6 @@
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import * as schema from "./schema";
+import { sslOption } from "./connection";
 
 export * as schema from "./schema";
 
@@ -42,8 +43,11 @@ async function createDb(): Promise<DB> {
     const { Pool } = await import("pg");
     const pool = new Pool({
       connectionString: url,
-      // Supabase and most managed Postgres require TLS.
-      ssl: url.includes("localhost") ? false : { rejectUnauthorized: false },
+      // Supabase and most managed Postgres require TLS; a local socket has none.
+      ssl: sslOption(url),
+      // Kept below the dev socket server's connection limit, and comfortably
+      // under Supabase's pooler limit on small plans.
+      max: Number(process.env.DB_POOL_MAX ?? 10),
     });
     return drizzle(pool, { schema }) as unknown as DB;
   }

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { config } from "dotenv";
+import { sslOption } from "./connection";
 
 config({ path: ".env.local", override: true });
 
@@ -18,7 +19,7 @@ export async function runMigrations() {
     const { Pool } = await import("pg");
     const pool = new Pool({
       connectionString: url,
-      ssl: url.includes("localhost") ? false : { rejectUnauthorized: false },
+      ssl: sslOption(url),
     });
     const db = drizzle(pool);
     await migrate(db, { migrationsFolder: "./drizzle" });

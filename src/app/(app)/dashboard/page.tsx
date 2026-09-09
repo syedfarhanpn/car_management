@@ -179,13 +179,6 @@ export default async function DashboardPage() {
                 >
                   <Icon name={m.icon} size={20} />
                 </div>
-                <span
-                  className="badge"
-                  style={{ background: "var(--surface-2)", color: "var(--text-subtle)" }}
-                  title={`Delivered in phase ${m.phase}`}
-                >
-                  P{m.phase}
-                </span>
               </div>
               <p className="mt-3 text-[14.5px] font-semibold tracking-tight">{m.name}</p>
               <p className="mt-1 text-[12px] leading-snug" style={{ color: "var(--text-muted)" }}>

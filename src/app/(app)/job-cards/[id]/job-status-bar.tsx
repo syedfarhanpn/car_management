@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { ArrowRight, Ban, Check, FileText, Send } from "lucide-react";
 import { setJobStatus } from "../actions";
 import { generateInvoice } from "@/app/(app)/billing/actions";
+import { SendWhatsAppButton } from "@/components/send-whatsapp-button";
 
 /**
  * The status transitions a user can actually take from here, as buttons rather
@@ -107,6 +108,9 @@ export function JobStatusBar({
         <FileText size={15} />
         Generate invoice
       </button>,
+      // Telling the customer the car is ready is the point at which most
+      // "is it done yet?" phone calls stop happening.
+      <SendWhatsAppButton key="ready" kind="job-ready" id={jobCardId} full />,
       <button key="back" className="btn btn-ghost w-full" disabled={pending} onClick={() => move("IN_PROGRESS")}>
         Reopen for more work
       </button>,

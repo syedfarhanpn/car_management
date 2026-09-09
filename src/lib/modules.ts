@@ -15,7 +15,6 @@ export type ModuleDef = {
   icon: string;
   accent: string;
   roles: SessionUser["role"][];
-  phase: number;
 };
 
 const ALL: SessionUser["role"][] = ["ADMIN", "MANAGER", "STAFF"];
@@ -31,7 +30,6 @@ export const MODULES: ModuleDef[] = [
     icon: "ClipboardList",
     accent: "#2049e0",
     roles: ALL,
-    phase: 2,
   },
   {
     key: "clients",
@@ -41,7 +39,6 @@ export const MODULES: ModuleDef[] = [
     icon: "Car",
     accent: "#0891b2",
     roles: ALL,
-    phase: 1,
   },
   {
     key: "billing",
@@ -51,7 +48,6 @@ export const MODULES: ModuleDef[] = [
     icon: "ReceiptIndianRupee",
     accent: "#0f7b4f",
     roles: ALL,
-    phase: 3,
   },
   {
     key: "inventory",
@@ -61,7 +57,6 @@ export const MODULES: ModuleDef[] = [
     icon: "Boxes",
     accent: "#7c3aed",
     roles: MGMT,
-    phase: 4,
   },
   {
     key: "purchases",
@@ -71,7 +66,6 @@ export const MODULES: ModuleDef[] = [
     icon: "ShoppingCart",
     accent: "#c2410c",
     roles: MGMT,
-    phase: 4,
   },
   {
     key: "accounts",
@@ -81,7 +75,6 @@ export const MODULES: ModuleDef[] = [
     icon: "Wallet",
     accent: "#b45309",
     roles: MGMT,
-    phase: 5,
   },
   {
     key: "revenue",
@@ -91,7 +84,6 @@ export const MODULES: ModuleDef[] = [
     icon: "TrendingUp",
     accent: "#be123c",
     roles: MGMT,
-    phase: 5,
   },
   {
     key: "employees",
@@ -101,7 +93,6 @@ export const MODULES: ModuleDef[] = [
     icon: "UsersRound",
     accent: "#4338ca",
     roles: MGMT,
-    phase: 6,
   },
   {
     key: "whatsapp",
@@ -111,7 +102,6 @@ export const MODULES: ModuleDef[] = [
     icon: "MessageCircle",
     accent: "#059669",
     roles: MGMT,
-    phase: 7,
   },
   {
     key: "settings",
@@ -121,7 +111,6 @@ export const MODULES: ModuleDef[] = [
     icon: "Settings",
     accent: "#475569",
     roles: ADMIN_ONLY,
-    phase: 1,
   },
 ];
 

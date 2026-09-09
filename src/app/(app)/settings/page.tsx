@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { eq } from "drizzle-orm";
-import { ChevronRight, IndianRupee, Percent } from "lucide-react";
+import { and, eq, sql } from "drizzle-orm";
+import { Boxes, Building2, Car, ChevronRight, IndianRupee, ListTree, Percent, Users, Wrench } from "lucide-react";
 import { getDb } from "@/db";
 import * as s from "@/db/schema";
 import { requireRole } from "@/lib/auth";
@@ -11,86 +11,127 @@ export default async function SettingsPage() {
   const user = await requireRole(["ADMIN"]);
   const db = await getDb();
 
-  const [org, config, series] = await Promise.all([
+  const [org, config, counts] = await Promise.all([
     db.select().from(s.organizations).where(eq(s.organizations.id, user.orgId)).limit(1).then((r) => r[0]),
     getTaxConfig(user.orgId),
-    db.select().from(s.invoiceSeries).where(eq(s.invoiceSeries.orgId, user.orgId)).limit(1).then((r) => r[0]),
+    db
+      .select({
+        services: sql<number>`(select count(*)::int from ${s.services} where ${s.services.orgId} = ${user.orgId} and ${s.services.isActive} = true)`,
+        classes: sql<number>`(select count(*)::int from ${s.vehicleClasses} where ${s.vehicleClasses.orgId} = ${user.orgId} and ${s.vehicleClasses.archivedAt} is null)`,
+        models: sql<number>`(select count(*)::int from ${s.vehicleModels} where ${s.vehicleModels.orgId} = ${user.orgId} and ${s.vehicleModels.archivedAt} is null)`,
+        recipes: sql<number>`(select count(*)::int from ${s.serviceRecipes} where ${s.serviceRecipes.orgId} = ${user.orgId})`,
+        users: sql<number>`(select count(*)::int from ${s.users} where ${s.users.orgId} = ${user.orgId} and ${s.users.isActive} = true)`,
+      })
+      .from(s.organizations)
+      .where(eq(s.organizations.id, user.orgId))
+      .limit(1)
+      .then((r) => r[0]),
   ]);
 
+  const cards = [
+    {
+      href: "/settings/business",
+      icon: Building2,
+      title: "Business profile",
+      body: "Name, address and GSTIN — the letterhead on every invoice",
+      meta: org?.gstin ?? "No GSTIN set",
+      accent: "#0891b2",
+    },
+    {
+      href: "/settings/tax",
+      icon: Percent,
+      title: "Tax",
+      body: config.pricesIncludeTax ? "Listed prices include GST" : "GST added on top of listed prices",
+      meta: config.enabled ? "GST on" : "GST off",
+      accent: "#0f7b4f",
+    },
+    {
+      href: "/settings/services",
+      icon: Wrench,
+      title: "Service catalogue",
+      body: "What the shop sells, and which categories need an estimate first",
+      meta: `${counts?.services ?? 0} active`,
+      accent: "#2049e0",
+    },
+    {
+      href: "/settings/pricing",
+      icon: IndianRupee,
+      title: "Price matrix",
+      body: "Every service priced per vehicle class",
+      meta: `${(counts?.services ?? 0) * (counts?.classes ?? 0)} cells`,
+      accent: "#7c3aed",
+    },
+    {
+      href: "/settings/vehicle-classes",
+      icon: ListTree,
+      title: "Vehicle classes",
+      body: "Size bands that drive pricing",
+      meta: `${counts?.classes ?? 0} classes`,
+      accent: "#c2410c",
+    },
+    {
+      href: "/settings/models",
+      icon: Car,
+      title: "Vehicle models",
+      body: "Oil grade, capacity and filter numbers per model",
+      meta: `${counts?.models ?? 0} models`,
+      accent: "#be123c",
+    },
+    {
+      href: "/settings/recipes",
+      icon: Boxes,
+      title: "Consumable recipes",
+      body: "What each service burns, deducted automatically on completion",
+      meta: `${counts?.recipes ?? 0} lines`,
+      accent: "#b45309",
+    },
+    {
+      href: "/settings/users",
+      icon: Users,
+      title: "Users",
+      body: "Who can sign in and what they can see",
+      meta: `${counts?.users ?? 0} active`,
+      accent: "#4338ca",
+    },
+  ];
+
   return (
-    <Page>
-      <PageHeader title="Settings" subtitle={org?.name} backHref="/dashboard" />
+    <Page wide>
+      <PageHeader
+        title="Settings"
+        subtitle={
+          <span className="flex items-center gap-2">
+            {org?.name}
+            <Badge tone={config.enabled ? "success" : "neutral"}>{config.enabled ? "GST on" : "GST off"}</Badge>
+          </span>
+        }
+      />
 
-      <div className="space-y-3">
-        <Link href="/settings/pricing" className="card p-4 flex items-center gap-4 transition-shadow hover:shadow-[var(--shadow-md)]">
-          <div className="grid place-items-center w-10 h-10 rounded-lg shrink-0" style={{ background: "var(--brand-soft)", color: "var(--brand)" }}>
-            <IndianRupee size={19} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] font-semibold">Price matrix</p>
-            <p className="text-[12.5px]" style={{ color: "var(--text-muted)" }}>
-              Every service priced per vehicle class. This is where the shop&apos;s real price list goes.
-            </p>
-          </div>
-          <ChevronRight size={18} style={{ color: "var(--text-subtle)" }} />
-        </Link>
-
-        <section className="card p-4">
-          <div className="flex items-start gap-4">
-            <div className="grid place-items-center w-10 h-10 rounded-lg shrink-0" style={{ background: "var(--success-soft)", color: "var(--success)" }}>
-              <Percent size={19} />
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {cards.map((c) => (
+          <Link
+            key={c.href}
+            href={c.href}
+            className="card p-4 flex items-start gap-3.5 transition-shadow hover:shadow-[var(--shadow-md)]"
+          >
+            <div
+              className="grid place-items-center w-10 h-10 rounded-lg shrink-0"
+              style={{ background: `color-mix(in srgb, ${c.accent} 12%, transparent)`, color: c.accent }}
+            >
+              <c.icon size={19} />
             </div>
-            <div className="flex-1">
-              <p className="text-[14px] font-semibold">
-                Tax <Badge tone={config.enabled ? "success" : "neutral"}>{config.enabled ? "GST on" : "GST off"}</Badge>
+            <div className="min-w-0 flex-1">
+              <p className="text-[14px] font-semibold">{c.title}</p>
+              <p className="mt-0.5 text-[12px] leading-snug" style={{ color: "var(--text-muted)" }}>
+                {c.body}
               </p>
-              <dl className="mt-2.5 grid gap-x-6 gap-y-1.5 sm:grid-cols-2 text-[12.5px]">
-                <div className="flex justify-between gap-3">
-                  <dt style={{ color: "var(--text-muted)" }}>GSTIN</dt>
-                  <dd className="tnum">{org?.gstin ?? "Not set"}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt style={{ color: "var(--text-muted)" }}>Listed prices</dt>
-                  <dd>{config.pricesIncludeTax ? "include GST" : "exclude GST"}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt style={{ color: "var(--text-muted)" }}>Home state</dt>
-                  <dd className="tnum">
-                    {org?.stateCode} · {org?.state}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt style={{ color: "var(--text-muted)" }}>Outside purchases</dt>
-                  <dd>{config.passThroughTreatment === "PURE_AGENT" ? "Pure agent" : "Taxable"}</dd>
-                </div>
-                <div className="flex justify-between gap-3">
-                  <dt style={{ color: "var(--text-muted)" }}>Invoice series</dt>
-                  <dd className="tnum">
-                    {series ? `${series.prefix}/${series.financialYear}/${String(series.currentNumber).padStart(series.padWidth, "0")}` : "—"}
-                  </dd>
-                </div>
-              </dl>
-              <p className="mt-3 text-[11.5px]" style={{ color: "var(--text-subtle)" }}>
-                These are stored as settings and read on every bill. Editing them from this screen arrives with the
-                Settings module; today they are changed in the seed or directly in the settings table.
+              <p className="mt-1.5 text-[11.5px] tnum" style={{ color: "var(--text-subtle)" }}>
+                {c.meta}
               </p>
             </div>
-          </div>
-        </section>
-
-        <section className="card p-4">
-          <p className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-subtle)" }}>
-            Still to come
-          </p>
-          <ul className="mt-2 grid gap-1.5 sm:grid-cols-2 text-[12.5px]" style={{ color: "var(--text-muted)" }}>
-            <li>Business profile & invoice letterhead</li>
-            <li>Service catalogue editor</li>
-            <li>Vehicle classes & model master</li>
-            <li>User management and roles</li>
-            <li>Consumable recipes per service</li>
-            <li>Tax toggles & invoice numbering</li>
-          </ul>
-        </section>
+            <ChevronRight size={17} style={{ color: "var(--text-subtle)" }} className="shrink-0" />
+          </Link>
+        ))}
       </div>
     </Page>
   );

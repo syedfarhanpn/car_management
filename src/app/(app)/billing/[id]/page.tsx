@@ -10,6 +10,7 @@ import { formatRegistration } from "@/lib/vehicle";
 import { Badge, INVOICE_STATUS, Page, PageHeader } from "@/components/ui";
 import { PaymentPanel } from "./payment-panel";
 import { PrintButton } from "./print-button";
+import { SendWhatsAppButton } from "@/components/send-whatsapp-button";
 
 export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
@@ -96,7 +97,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
               )}
             </span>
           }
-          actions={<PrintButton />}
+          actions={
+            <>
+              {balance > 0 && invoice.status !== "CANCELLED" && (
+                <SendWhatsAppButton kind="payment-reminder" id={id} label="Payment reminder" />
+              )}
+              <SendWhatsAppButton kind="invoice" id={id} />
+              <PrintButton />
+            </>
+          }
         />
       </div>
 

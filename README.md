@@ -1,178 +1,116 @@
 # PitStop — Workshop Management
 
-Job cards, billing, inventory and accounts for a car detailing / washing /
-servicing business. Built single-client first, with a deliberate path to
-multi-tenant SaaS.
-
-**Phase 0 (complete): foundation.** Database schema, auth with roles, app shell
-and the module dashboard. Module screens land in later phases.
-
----
+Job cards, GST billing, inventory and accounts for a car detailing / servicing workshop.
 
 ## Running it
 
 ```bash
 npm install
-npm run db:seed
+npm run db:seed   # first time only
 npm run dev
 ```
 
-That is the whole setup. No Docker, no Postgres install.
+`npm run dev` starts two things: the database (PGlite behind a Postgres socket)
+and the Next.js app. Open http://localhost:3000.
 
-| Account | Password | Sees |
+| Login | Password | Sees |
 |---|---|---|
-| `admin@demo.com` | `admin123` | Everything: costs, margins, discounts, settings |
-| `manager@demo.com` | `manager123` | Operations and reports, no org settings |
-| `staff@demo.com` | `staff123` | Job cards and billing at list price only |
+| admin@demo.com | admin123 | Everything — costs, margins, discounts, settings |
+| manager@demo.com | manager123 | Operations and reports, not settings or users |
+| staff@demo.com | staff123 | Job cards and billing at list price only |
+
+## The database
+
+Local development runs **PGlite as a socket server** (`scripts/db-server.mjs`),
+so the app talks to it with `node-postgres` over the normal Postgres wire
+protocol — exactly as it will talk to Supabase. There is no dev-only data path.
+
+PGlite embedded in-process was tried first and does not survive Next.js dev,
+which runs server code across several workers that each try to open the same
+single-writer database.
+
+Moving to Supabase is one line:
+
+```
+DATABASE_URL=postgres://...supabase.co:5432/postgres
+```
 
 Useful commands:
 
 ```bash
-npm run db:reset      # wipe the local database
-npm run db:seed       # migrate + seed demo data
-npm run db:generate   # generate a migration after editing the schema
-npm run db:studio     # browse the data
-npm run typecheck
+npm run db:seed      # migrate + demo data
+npm run db:reset     # drop the schema (works while the server is running)
+npm run db:generate  # new migration from schema changes
+npm run db:studio    # browse the data
 ```
 
----
+## How the money works
 
-## Stack
+- **Everything is integer paise.** No floats touch a monetary value.
+- **Prices include GST by default.** The shop advertises "Full Wash ₹500" and
+  the customer pays ₹500; the taxable value is back-calculated so
+  `taxable + tax` reconciles to the advertised price to the paise. Switch it in
+  Settings → Tax.
+- **Revenue means the taxable value.** GST is collected for the government and
+  reimbursed parts are the customer's money passing through — neither is income.
+- **Invoice numbers are gapless per financial year** (April–March) and allocated
+  inside the same transaction that writes the invoice. Cancelling keeps the
+  number.
 
-| Layer | Choice |
-|---|---|
-| Framework | Next.js 16 (App Router), React 19, TypeScript |
-| Database | PostgreSQL |
-| ORM | Drizzle |
-| Auth | Session cookie (jose JWT) + bcrypt, roles enforced server-side |
-| Styling | Tailwind v4, CSS custom properties, light + dark |
-| Validation | Zod |
+## Parts bought for a customer
 
-### Two drivers, one schema
+The case the whole pass-through model exists for: the shop fronts ₹24,500 for a
+radiator on someone's Fortuner.
 
-`.env.local` controls where data lives:
+- never enters stock, never valued as inventory
+- the **cost** is a receivable, not revenue; only the **markup** is income
+- the dashboard shows how much of the shop's own cash is currently sitting in
+  customer parts — recovered when their invoice is paid, not when the supplier
+  is paid
 
-```bash
-DB_DRIVER=pglite        # embedded Postgres in ./.pgdata — zero install (default)
-DB_DRIVER=postgres      # real Postgres / Supabase, set DATABASE_URL
-```
+## Stock
 
-PGlite is genuine Postgres compiled to WASM, not a shim, so enums, constraints
-and transactions behave identically. Moving to Supabase is two environment
-variables, not a rewrite. Nothing in `src/` knows which driver is active.
+Three item types, because a workshop genuinely has three:
 
----
-
-## The decisions that shaped the schema
-
-These came out of the requirements discussion and are binding unless revisited.
-
-**Money is integer paise, everywhere.** `₹1,250.50` is stored as `125050`.
-Floats are never used for money. `src/lib/money.ts` is the only place it becomes
-a string a human reads.
-
-**Inventory has three item types, not one.**
-
-| Type | Example | Stock tracked | Attached to a job |
+| Type | Example | Counted how | Deducted when |
 |---|---|---|---|
-| `STOCKED_PART` | Brake pads, oil filter | Yes, in pieces | Picked on the job card |
-| `BULK_CONSUMABLE` | Shampoo, wax, engine oil | Yes, in ml/g | Via service recipe |
-| `PASS_THROUGH` | Part bought for one customer | **Never** | Cost only |
+| Stocked part | Brake pads, oil filter | Pieces | Picked onto a job card |
+| Bulk consumable | Shampoo, wax, engine oil | ml / g | By service recipe, on job completion |
+| Pass-through | A part bought for one customer | Never | Never — it is not stock |
 
-Nobody is going to log every squirt of shampoo. Bulk consumables are deducted
-automatically by a **service recipe** ("Premium Wash / SUV = 180ml shampoo +
-60ml wax") when the job closes, and reconciled by a periodic **stock take**.
-The gap between what should have been used and what is physically on the shelf
-is the variance report — the only way leakage ever surfaces.
+**Stock on hand is derived**, summed from an append-only ledger. There is no
+mutable quantity column, so when a physical count disagrees with the system you
+can see exactly which movement caused it and who entered it.
 
-Engine oil is modelled as a bulk consumable that *is* attributed per job, since
-the vehicle model master knows a Fortuner takes 7.5L of 10W-40.
+Recipes are what make consumables costable without anyone logging a drop of
+shampoo — and the gap between what recipes expected and what the ledger shows is
+the consumption variance report.
 
-**Stock is derived, never stored.** There is deliberately no `quantity` column
-on `inventory_items`. Current stock is `SUM(quantity_base)` over an append-only
-`stock_ledger`. A running total tells you nothing when the month-end count
-disagrees; the ledger tells you which movement was wrong, who entered it, and
-against which job.
+## WhatsApp
 
-**Pass-through parts are a reimbursement, not revenue.** When the shop buys a
-₹24,500 radiator for a customer, that money is neither income nor inventory —
-it is the shop's own cash sitting on somebody else's car. It posts to a client
-reimbursable and clears when the customer pays. Only the optional per-line
-markup counts as revenue. The dashboard surfaces the outstanding total, because
-this is the number most workshop software cannot show at all.
+Everything sits behind `NotificationProvider` in
+`src/lib/services/whatsapp.ts`. The demo uses a console adapter that logs
+instead of sending, so the flow can be exercised without messaging real
+customers.
 
-**Prices are a matrix, not a column.** A wash on a hatchback is not a wash on a
-Fortuner. `service_prices` has nullable dimensions giving four override levels,
-most specific winning: client + model → client + class → model → class.
+To connect the client's gateway, set `WHATSAPP_PROVIDER=custom` plus
+`WHATSAPP_API_URL` / `WHATSAPP_API_KEY`, and adjust the request shape in
+`CustomHttpProvider` — one class, deliberately.
 
-**Vehicle ownership is a history table.** Cars get sold. Service history has to
-follow the car while billing follows the current owner; a plain `client_id`
-cannot express both.
+Set `WHATSAPP_REQUIRES_TEMPLATES=true` if the gateway only accepts
+pre-registered templates.
 
-**Invoice numbering is built properly even though GST is off.** If the client
-turns out to be registered, the series must be gapless and sequential from the
-registration date — that is the one thing that cannot be retrofitted. The tax
-engine exists and is gated by a single setting (`tax.enabled`).
+## Multi-tenancy
 
-**Discounts are admin-only**, enforced server-side on every mutation. A hidden
-button is not a control.
+Ships single-client, as scoped. Every business table already carries `org_id`
+pointing at one seeded organisation. It costs nothing today and means the SaaS
+step is "enable row-level security and add signup" rather than backfilling a
+tenant key across 40 tables while a paying client depends on the system.
 
-**Tenancy.** Ships single-client. Every business table already carries `org_id`
-(and `branch_id` where relevant) pointing at one seeded row — invisible today,
-zero runtime cost. The SaaS migration becomes "enable RLS and add signup"
-rather than backfilling a tenant key across 30 tables while a paying client
-depends on the system.
+## Still open
 
----
-
-## Layout
-
-```
-src/
-  db/
-    schema/          # 30 tables across 12 domain files
-    index.ts         # driver switch (pglite | postgres)
-    migrate.ts       # applies ./drizzle/*.sql
-    seed.ts          # demo org, catalogue, clients, jobs, invoices
-  lib/
-    auth.ts          # sessions + the `can` capability map
-    money.ts         # paise formatting, GST split, round-off
-    vehicle.ts       # plate normalisation and last-4 search
-    modules.ts       # module registry (dashboard + sidebar share it)
-    queries/
-  app/
-    login/
-    (app)/           # authenticated shell
-      dashboard/
-      job-cards/ clients/ billing/ inventory/ purchases/
-      accounts/ revenue/ employees/ whatsapp/ settings/
-```
-
----
-
-## Phases
-
-| Phase | Scope | Status |
-|---|---|---|
-| 0 | Schema, auth, roles, app shell, module dashboard | **Done** |
-| 1 | Clients, vehicles, last-4 search, price matrix editor | Next |
-| 2 | Job cards: create, assign, services, parts, photos | |
-| 3 | Billing, invoices, payments, receivables — **go-live** | |
-| 4 | Inventory, purchases, pass-through, stock takes | |
-| 5 | Accounts, expenses, revenue reports | |
-| 6 | Employees and attendance | |
-| 7 | WhatsApp reminders and campaigns | |
-| 8 | SaaS: tenant onboarding, plans, super-admin | |
-
-Phase 3 is the real milestone — that is when the shop stops using its notebook.
-
----
-
-## Open items
-
-- **GST registration status** unconfirmed. Tax is off; confirm before Phase 3.
-- **WhatsApp API contract** from the client's team: auth, whether templates are
-  required, PDF attachment support, delivery webhooks, rate limits, phone
-  format. Adapter interface is ready; it drops in as one file.
-- **Real price list** — the seeded catalogue is realistic placeholder data and
-  is plain data to replace.
+- The client's real GSTIN (currently a placeholder in Settings → Business)
+- Whether their accountant agrees with the pure-agent treatment of parts bought
+  on a customer's behalf
+- Their WhatsApp gateway's actual contract
+- Before/after job photos, and multi-branch
