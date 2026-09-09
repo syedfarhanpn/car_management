@@ -1,0 +1,232 @@
+@import "tailwindcss";
+
+/**
+ * Workshop-floor design constraints, not decoration:
+ *  - dense but tappable: staff use this on a phone with wet hands
+ *  - high contrast: tablets get used near an open shutter in daylight
+ *  - one accent colour, used only for primary actions and money
+ */
+
+@theme {
+  --color-ink-50: #f6f7f9;
+  --color-ink-100: #eceef2;
+  --color-ink-200: #d5d9e2;
+  --color-ink-300: #b0b8c8;
+  --color-ink-400: #8590a6;
+  --color-ink-500: #66718a;
+  --color-ink-600: #515a70;
+  --color-ink-700: #434a5c;
+  --color-ink-800: #3a3f4e;
+  --color-ink-900: #232838;
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #d9e6ff;
+  --color-brand-200: #bcd3ff;
+  --color-brand-300: #8eb6ff;
+  --color-brand-400: #598eff;
+  --color-brand-500: #3366f5;
+  --color-brand-600: #2049e0;
+  --color-brand-700: #1a3bb8;
+  --color-brand-800: #1c3494;
+  --color-brand-900: #1c3175;
+}
+
+:root {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: #e2e7f0;
+  --border-strong: #cbd3e1;
+  --text: #161b27;
+  --text-muted: #5b6478;
+  --text-subtle: #8b94a8;
+  --brand: #2049e0;
+  --brand-fg: #ffffff;
+  --brand-soft: #eef3ff;
+  --success: #0f7b4f;
+  --success-soft: #e6f6ee;
+  --warning: #9a6400;
+  --warning-soft: #fdf3e0;
+  --danger: #b42318;
+  --danger-soft: #fdeceb;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 4px 16px rgba(16, 24, 40, 0.08);
+  --radius: 10px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1219;
+    --surface: #161b25;
+    --surface-2: #1c222e;
+    --border: #262d3b;
+    --border-strong: #38415a;
+    --text: #e8ecf4;
+    --text-muted: #9aa4b8;
+    --text-subtle: #6d7789;
+    --brand: #6690ff;
+    --brand-fg: #0b0f16;
+    --brand-soft: #1a2340;
+    --success: #46c48a;
+    --success-soft: #12301f;
+    --warning: #e0a03a;
+    --warning-soft: #2e2411;
+    --danger: #f27168;
+    --danger-soft: #33191a;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0e1219;
+  --surface: #161b25;
+  --surface-2: #1c222e;
+  --border: #262d3b;
+  --border-strong: #38415a;
+  --text: #e8ecf4;
+  --text-muted: #9aa4b8;
+  --text-subtle: #6d7789;
+  --brand: #6690ff;
+  --brand-fg: #0b0f16;
+  --brand-soft: #1a2340;
+  --success: #46c48a;
+  --success-soft: #12301f;
+  --warning: #e0a03a;
+  --warning-soft: #2e2411;
+  --danger: #f27168;
+  --danger-soft: #33191a;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Tabular figures everywhere money or counts appear, so columns line up. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.input:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+}
+.input::placeholder {
+  color: var(--text-subtle);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 550;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--brand);
+  color: var(--brand-fg);
+}
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--brand) 88%, black);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+  border-color: var(--border-strong);
+}
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+/* The invoice must print as a document, not as a screenshot of an app:
+   no sidebar, no side panel, no dark theme, plain black on white. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  aside,
+  nav,
+  .print\:hidden {
+    display: none !important;
+  }
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --text: #000000;
+    --text-muted: #333333;
+    --text-subtle: #555555;
+    --border: #cccccc;
+    --border-strong: #999999;
+    --success: #000000;
+    --warning: #000000;
+    --danger: #000000;
+  }
+  body {
+    background: #fff !important;
+  }
+  .card {
+    box-shadow: none !important;
+    border: none !important;
+  }
+}
