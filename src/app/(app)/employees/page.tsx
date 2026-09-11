@@ -53,7 +53,6 @@ export default async function EmployeesPage() {
     <Page wide>
       <PageHeader
         title="Employees"
-        backHref="/dashboard"
         subtitle={`${employees.filter((e) => e.isActive).length} active${
           can.viewCosts(user) ? ` · ${formatINR(payroll)} monthly payroll` : ""
         }`}

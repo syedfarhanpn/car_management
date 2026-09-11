@@ -86,7 +86,6 @@ export default async function PurchasesPage({
     <Page wide>
       <PageHeader
         title="Purchases"
-        backHref="/dashboard"
         actions={
           <>
             <Link href="/purchases/suppliers" className="btn btn-ghost">

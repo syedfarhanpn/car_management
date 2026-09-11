@@ -54,7 +54,6 @@ export default async function WhatsAppPage() {
     <Page wide>
       <PageHeader
         title="WhatsApp"
-        backHref="/dashboard"
         subtitle="Reminders, receipts and promotions — with a log of every message so nothing is a guess."
       />
       <WhatsAppConsole

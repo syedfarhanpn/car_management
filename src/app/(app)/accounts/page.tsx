@@ -126,7 +126,6 @@ export default async function AccountsPage() {
     <Page wide>
       <PageHeader
         title="Accounts"
-        backHref="/dashboard"
         subtitle="Cash in, cash out, and who owes whom."
         actions={
           <>

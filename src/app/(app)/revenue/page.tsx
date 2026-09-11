@@ -38,7 +38,6 @@ export default async function RevenuePage({
     <Page wide>
       <PageHeader
         title="Revenue & Reports"
-        backHref="/dashboard"
         subtitle={period.label}
         actions={
           <div className="flex gap-1.5">

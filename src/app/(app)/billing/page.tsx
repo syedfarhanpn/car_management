@@ -73,7 +73,6 @@ export default async function BillingPage({
       <PageHeader
         title="Billing & Invoices"
         subtitle={`${invoices.length} shown${clientId ? " · filtered by client" : ""}`}
-        backHref="/dashboard"
       />
 
       {outstanding > 0 && (

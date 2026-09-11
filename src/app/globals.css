@@ -1,100 +1,159 @@
 @import "tailwindcss";
 
 /**
- * Workshop-floor design constraints, not decoration:
- *  - dense but tappable: staff use this on a phone with wet hands
- *  - high contrast: tablets get used near an open shutter in daylight
- *  - one accent colour, used only for primary actions and money
+ * Design tokens follow shadcn/ui naming (--background, --card, --muted,
+ * --primary, --chart-N …) so any component copied from shadcn drops straight
+ * in without translation.
+ *
+ * The names this app already used (--surface, --text-muted, --brand …) are
+ * kept below as aliases pointing at the same values, so every existing screen
+ * picks up the new look without being rewritten.
  */
 
-@theme {
-  --color-ink-50: #f6f7f9;
-  --color-ink-100: #eceef2;
-  --color-ink-200: #d5d9e2;
-  --color-ink-300: #b0b8c8;
-  --color-ink-400: #8590a6;
-  --color-ink-500: #66718a;
-  --color-ink-600: #515a70;
-  --color-ink-700: #434a5c;
-  --color-ink-800: #3a3f4e;
-  --color-ink-900: #232838;
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #d9e6ff;
-  --color-brand-200: #bcd3ff;
-  --color-brand-300: #8eb6ff;
-  --color-brand-400: #598eff;
-  --color-brand-500: #3366f5;
-  --color-brand-600: #2049e0;
-  --color-brand-700: #1a3bb8;
-  --color-brand-800: #1c3494;
-  --color-brand-900: #1c3175;
-}
-
 :root {
-  --bg: #f4f6fa;
-  --surface: #ffffff;
-  --surface-2: #f8fafc;
-  --border: #e2e7f0;
-  --border-strong: #cbd3e1;
-  --text: #161b27;
-  --text-muted: #5b6478;
-  --text-subtle: #8b94a8;
-  --brand: #2049e0;
-  --brand-fg: #ffffff;
-  --brand-soft: #eef3ff;
-  --success: #0f7b4f;
-  --success-soft: #e6f6ee;
-  --warning: #9a6400;
-  --warning-soft: #fdf3e0;
-  --danger: #b42318;
-  --danger-soft: #fdeceb;
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
-  --shadow-md: 0 4px 16px rgba(16, 24, 40, 0.08);
-  --radius: 10px;
+  --radius: 0.65rem;
+
+  --background: #ffffff;
+  --foreground: #09090b;
+  --card: #ffffff;
+  --card-foreground: #09090b;
+  --popover: #ffffff;
+  --popover-foreground: #09090b;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+  --destructive: #dc2626;
+  --success: #16a34a;
+  --warning: #d97706;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #2563eb;
+
+  --chart-1: #2563eb;
+  --chart-2: #8b5cf6;
+  --chart-3: #f97316;
+  --chart-4: #10b981;
+  --chart-5: #f43f5e;
+
+  --sidebar: #fafafa;
+  --sidebar-border: #e4e4e7;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08);
+
+  /* --- aliases used by existing screens --- */
+  --bg: var(--background);
+  --surface: var(--card);
+  --surface-2: var(--muted);
+  --text: var(--foreground);
+  --text-muted: var(--muted-foreground);
+  --text-subtle: #a1a1aa;
+  --border-strong: #d4d4d8;
+  --brand: var(--primary);
+  --brand-fg: var(--primary-foreground);
+  --brand-soft: #eff6ff;
+  --success-soft: #f0fdf4;
+  --warning-soft: #fffbeb;
+  --danger: var(--destructive);
+  --danger-soft: #fef2f2;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1219;
-    --surface: #161b25;
-    --surface-2: #1c222e;
-    --border: #262d3b;
-    --border-strong: #38415a;
-    --text: #e8ecf4;
-    --text-muted: #9aa4b8;
-    --text-subtle: #6d7789;
-    --brand: #6690ff;
-    --brand-fg: #0b0f16;
-    --brand-soft: #1a2340;
-    --success: #46c48a;
-    --success-soft: #12301f;
-    --warning: #e0a03a;
-    --warning-soft: #2e2411;
-    --danger: #f27168;
-    --danger-soft: #33191a;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+    --background: #09090b;
+    --foreground: #fafafa;
+    --card: #0e0e11;
+    --card-foreground: #fafafa;
+    --popover: #18181b;
+    --popover-foreground: #fafafa;
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+    --secondary: #1c1c1f;
+    --secondary-foreground: #fafafa;
+    --muted: #18181b;
+    --muted-foreground: #8b8b94;
+    --accent: #1c1c1f;
+    --accent-foreground: #fafafa;
+    --destructive: #ef4444;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --border: #232327;
+    --input: #232327;
+    --ring: #3b82f6;
+
+    --chart-1: #3b82f6;
+    --chart-2: #a855f7;
+    --chart-3: #fb923c;
+    --chart-4: #34d399;
+    --chart-5: #fb7185;
+
+    --sidebar: #0a0a0c;
+    --sidebar-border: #1e1e22;
+
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 16px -2px rgb(0 0 0 / 0.6);
+
+    --text-subtle: #6b6b73;
+    --border-strong: #2f2f35;
+    --brand-soft: #17223d;
+    --success-soft: #0d2818;
+    --warning-soft: #2a1f0a;
+    --danger-soft: #2c1416;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #0e1219;
-  --surface: #161b25;
-  --surface-2: #1c222e;
-  --border: #262d3b;
-  --border-strong: #38415a;
-  --text: #e8ecf4;
-  --text-muted: #9aa4b8;
-  --text-subtle: #6d7789;
-  --brand: #6690ff;
-  --brand-fg: #0b0f16;
-  --brand-soft: #1a2340;
-  --success: #46c48a;
-  --success-soft: #12301f;
-  --warning: #e0a03a;
-  --warning-soft: #2e2411;
-  --danger: #f27168;
-  --danger-soft: #33191a;
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #0e0e11;
+  --card-foreground: #fafafa;
+  --popover: #18181b;
+  --popover-foreground: #fafafa;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #1c1c1f;
+  --secondary-foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #8b8b94;
+  --accent: #1c1c1f;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --border: #232327;
+  --input: #232327;
+  --ring: #3b82f6;
+  --chart-1: #3b82f6;
+  --chart-2: #a855f7;
+  --chart-3: #fb923c;
+  --chart-4: #34d399;
+  --chart-5: #fb7185;
+  --sidebar: #0a0a0c;
+  --sidebar-border: #1e1e22;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 16px -2px rgb(0 0 0 / 0.6);
+  --text-subtle: #6b6b73;
+  --border-strong: #2f2f35;
+  --brand-soft: #17223d;
+  --success-soft: #0d2818;
+  --warning-soft: #2a1f0a;
+  --danger-soft: #2c1416;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-border: var(--border);
+  --radius-lg: var(--radius);
 }
 
 * {
@@ -103,9 +162,10 @@
 
 html,
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--background);
+  color: var(--foreground);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -121,25 +181,27 @@ body {
 }
 
 .card {
-  background: var(--surface);
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
 }
 
-.input {
+.input,
+select.input,
+textarea.input {
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
-  padding: 0.55rem 0.75rem;
-  color: var(--text);
+  background: var(--background);
+  border: 1px solid var(--input);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.5rem 0.7rem;
+  font-size: 13.5px;
+  color: var(--foreground);
   outline: none;
   transition: border-color 0.12s, box-shadow 0.12s;
 }
 .input:focus {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent);
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 20%, transparent);
 }
 .input::placeholder {
   color: var(--text-subtle);
@@ -149,34 +211,34 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  border-radius: 8px;
-  padding: 0.55rem 0.9rem;
-  font-weight: 550;
+  gap: 0.45rem;
+  border-radius: calc(var(--radius) - 2px);
+  padding: 0.5rem 0.85rem;
+  font-size: 13.5px;
+  font-weight: 500;
   border: 1px solid transparent;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, opacity 0.12s;
   white-space: nowrap;
 }
 .btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 .btn-primary {
-  background: var(--brand);
-  color: var(--brand-fg);
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 .btn-primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--brand) 88%, black);
+  background: color-mix(in srgb, var(--primary) 88%, black);
 }
 .btn-ghost {
-  background: transparent;
-  color: var(--text-muted);
-  border-color: var(--border-strong);
+  background: var(--background);
+  color: var(--foreground);
+  border-color: var(--border);
 }
 .btn-ghost:hover:not(:disabled) {
-  background: var(--surface-2);
-  color: var(--text);
+  background: var(--accent);
 }
 
 .badge {
@@ -184,18 +246,44 @@ body {
   align-items: center;
   gap: 0.3rem;
   border-radius: 999px;
-  padding: 0.15rem 0.55rem;
+  padding: 0.1rem 0.5rem;
   font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-weight: 500;
+  line-height: 1.5;
+  border: 1px solid transparent;
 }
 
 .label {
   display: block;
-  font-size: 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--foreground);
+  margin-bottom: 0.35rem;
+}
+
+.eyebrow {
+  font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 0.3rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+/* Scrollbars that match the surface they sit on rather than the OS default. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 /* The invoice must print as a document, not as a screenshot of an app:
@@ -210,13 +298,18 @@ body {
     display: none !important;
   }
   :root {
+    --background: #ffffff;
+    --card: #ffffff;
+    --muted: #ffffff;
+    --foreground: #000000;
+    --muted-foreground: #333333;
+    --border: #cccccc;
     --bg: #ffffff;
     --surface: #ffffff;
     --surface-2: #ffffff;
     --text: #000000;
     --text-muted: #333333;
     --text-subtle: #555555;
-    --border: #cccccc;
     --border-strong: #999999;
     --success: #000000;
     --warning: #000000;

@@ -20,7 +20,6 @@ export default async function ClientsPage({
       <PageHeader
         title="Clients & Vehicles"
         subtitle={`${clients.length} ${clients.length === 1 ? "client" : "clients"}${q ? ` matching “${q}”` : ""}`}
-        backHref="/dashboard"
         actions={
           <Link href="/clients/new" className="btn btn-primary">
             <Plus size={16} />

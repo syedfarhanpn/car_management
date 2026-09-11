@@ -61,7 +61,6 @@ export default async function InventoryPage({
       <PageHeader
         title="Inventory"
         subtitle="Stock on hand is derived from the movement ledger, never stored — so every number here can be traced to what caused it."
-        backHref="/dashboard"
         actions={
           <>
             <Link href="/inventory/stock-take" className="btn btn-ghost">

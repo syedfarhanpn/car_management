@@ -57,13 +57,6 @@ export default async function JobCardsPage({
       <PageHeader
         title="Job Cards"
         subtitle={`${jobs.length} ${active.label.toLowerCase()}`}
-        backHref="/dashboard"
-        actions={
-          <Link href="/job-cards/new" className="btn btn-primary">
-            <Plus size={16} />
-            New job card
-          </Link>
-        }
       />
 
       <div className="flex flex-wrap gap-1.5 mb-4">

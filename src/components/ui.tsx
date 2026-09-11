@@ -104,12 +104,16 @@ export function Field({
   );
 }
 
+/**
+ * Tinted from the same token as the text, so a badge stays legible in both
+ * themes without maintaining a second palette of background colours.
+ */
 const TONES = {
-  neutral: { bg: "var(--surface-2)", fg: "var(--text-muted)" },
-  brand: { bg: "var(--brand-soft)", fg: "var(--brand)" },
-  success: { bg: "var(--success-soft)", fg: "var(--success)" },
-  warning: { bg: "var(--warning-soft)", fg: "var(--warning)" },
-  danger: { bg: "var(--danger-soft)", fg: "var(--danger)" },
+  neutral: { bg: "var(--muted)", fg: "var(--muted-foreground)" },
+  brand: { bg: "color-mix(in srgb, var(--primary) 14%, transparent)", fg: "var(--primary)" },
+  success: { bg: "color-mix(in srgb, var(--success) 16%, transparent)", fg: "var(--success)" },
+  warning: { bg: "color-mix(in srgb, var(--warning) 18%, transparent)", fg: "var(--warning)" },
+  danger: { bg: "color-mix(in srgb, var(--destructive) 15%, transparent)", fg: "var(--destructive)" },
 } as const;
 
 export type Tone = keyof typeof TONES;
@@ -164,7 +168,7 @@ export function Th({
   return (
     <th
       className={`font-medium px-4 py-2.5 text-${align} whitespace-nowrap`}
-      style={{ background: "var(--surface-2)", color: "var(--text-muted)" }}
+      style={{ color: "var(--muted-foreground)", borderBottom: "1px solid var(--border)" }}
     >
       {children}
     </th>
