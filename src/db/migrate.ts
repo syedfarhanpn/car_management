@@ -1,25 +1,32 @@
 import "dotenv/config";
 import { config } from "dotenv";
 import { sslOption } from "./connection";
+import { resolveDbDriver, requireDatabaseUrl } from "@/lib/env";
 
 config({ path: ".env.local", override: true });
 
 /**
- * Applies ./drizzle/*.sql against whichever driver DB_DRIVER selects.
- * Safe to run repeatedly - Drizzle tracks which migrations have run.
+ * Applies ./drizzle/*.sql against whichever driver is configured.
+ * Safe to run repeatedly — Drizzle tracks which migrations have run.
+ *
+ * To set up a production database, point DATABASE_URL at it and run
+ * `npm run db:deploy` from your own machine. Migrations are deliberately not
+ * part of the build: a build that can't reach the database should fail loudly
+ * as a migration step you ran, not silently ship a deploy against a schema
+ * that was never created.
  */
 export async function runMigrations() {
-  const driver = process.env.DB_DRIVER ?? "pglite";
+  const driver = resolveDbDriver();
 
   if (driver === "postgres") {
-    const url = process.env.DATABASE_URL;
-    if (!url) throw new Error("DB_DRIVER=postgres requires DATABASE_URL");
+    const url = requireDatabaseUrl();
     const { drizzle } = await import("drizzle-orm/node-postgres");
     const { migrate } = await import("drizzle-orm/node-postgres/migrator");
     const { Pool } = await import("pg");
     const pool = new Pool({
       connectionString: url,
       ssl: sslOption(url),
+      max: 1,
     });
     const db = drizzle(pool);
     await migrate(db, { migrationsFolder: "./drizzle" });
@@ -45,7 +52,7 @@ if (isDirectRun) {
       process.exit(0);
     })
     .catch((err) => {
-      console.error(err);
+      console.error(err instanceof Error ? err.message : err);
       process.exit(1);
     });
 }

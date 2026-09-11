@@ -15,7 +15,9 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:reset": "tsx src/db/reset.ts",
     "dev:next": "next dev",
-    "db:serve": "node scripts/db-server.mjs"
+    "db:serve": "node scripts/db-server.mjs",
+    "db:deploy": "tsx src/db/migrate.ts",
+    "db:bootstrap": "tsx src/db/bootstrap.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

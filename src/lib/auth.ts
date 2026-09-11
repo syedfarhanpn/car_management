@@ -5,16 +5,13 @@ import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { eq, and } from "drizzle-orm";
 import { getDb } from "@/db";
+import { requireAuthSecret } from "@/lib/env";
 import * as s from "@/db/schema";
 
 const COOKIE_NAME = "pitstop_session";
 const MAX_AGE_SECONDS = 60 * 60 * 12; // a workshop shift, not a month
 
-function secret() {
-  const value = process.env.AUTH_SECRET;
-  if (!value) throw new Error("AUTH_SECRET is not set");
-  return new TextEncoder().encode(value);
-}
+const secret = requireAuthSecret;
 
 export type SessionUser = {
   id: string;

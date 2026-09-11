@@ -1,6 +1,7 @@
 import type { PgliteDatabase } from "drizzle-orm/pglite";
 import * as schema from "./schema";
 import { sslOption } from "./connection";
+import { isServerless, requireDatabaseUrl, resolveDbDriver, resolvePoolMax } from "@/lib/env";
 
 export * as schema from "./schema";
 
@@ -32,23 +33,31 @@ declare global {
 const DATA_DIR = process.env.PGLITE_DATA_DIR ?? "./.pgdata";
 
 async function createDb(): Promise<DB> {
-  const driver = process.env.DB_DRIVER ?? "pglite";
+  const driver = resolveDbDriver();
 
   if (driver === "postgres") {
-    const url = process.env.DATABASE_URL;
-    if (!url) {
-      throw new Error("DB_DRIVER=postgres requires DATABASE_URL to be set in .env.local");
-    }
+    const url = requireDatabaseUrl();
     const { drizzle } = await import("drizzle-orm/node-postgres");
     const { Pool } = await import("pg");
     const pool = new Pool({
       connectionString: url,
       // Supabase and most managed Postgres require TLS; a local socket has none.
       ssl: sslOption(url),
-      // Kept below the dev socket server's connection limit, and comfortably
-      // under Supabase's pooler limit on small plans.
-      max: Number(process.env.DB_POOL_MAX ?? 10),
+      // One per invocation on serverless, a real pool locally — see resolvePoolMax.
+      max: resolvePoolMax(),
+      // Serverless instances are frozen between requests; a connection held open
+      // across that gap is usually already dead when the next request reuses it.
+      idleTimeoutMillis: isServerless() ? 10_000 : 30_000,
+      connectionTimeoutMillis: 10_000,
     });
+
+    // A pool error with no listener takes the whole process down. On serverless
+    // that turns one dropped connection into a failed request for everyone
+    // sharing the instance.
+    pool.on("error", (err) => {
+      console.error("[db] idle client error:", err.message);
+    });
+
     return drizzle(pool, { schema }) as unknown as DB;
   }
 
@@ -112,7 +121,19 @@ function serialize<T extends object>(client: T): T {
 
 export function getDb(): Promise<DB> {
   if (!globalThis.__pitstopDb) {
-    globalThis.__pitstopDb = createDb();
+    /**
+     * Drop the cached promise if it rejects.
+     *
+     * Memoising a rejected promise means one bad startup — an unreachable
+     * database, a missing variable — is remembered for the life of the process.
+     * On a warm serverless instance that outlives the fix: you correct the
+     * environment, redeploy, and the still-warm instance keeps serving the
+     * original failure.
+     */
+    globalThis.__pitstopDb = createDb().catch((err) => {
+      globalThis.__pitstopDb = undefined;
+      throw err;
+    });
   }
   return globalThis.__pitstopDb;
 }
